@@ -1,0 +1,79 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "PrimalMarkupScript",
+	"patterns": [
+		{
+			"include": "#object"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#metatag"
+		}
+	],
+	"repository": {
+		"object": {
+			"patterns": [
+				{
+					"match":  "^\\[\\[([\\w\\d._]*)\\=([\\w\\d\\-\\\":;,._$%&\/\\\\ ]*)\\]\\]$",
+					"captures": {
+						"0":{
+							"name": "support.type.exception.python"
+						},
+						"1": {
+							"name": "support.type.property-name.json"
+						},
+						"2": {
+							"name": "string.quoted.double.json"
+						}
+					},
+					"name": "punctuation.definition.string.end.json"
+				},
+				{
+					"match":  "^\\{\\{([\\w\\d._]*)\\=([\\w\\d\\-\\\":;,._$%&\/\\\\ ]*)\\}\\}$",
+					"captures": {
+						"0":{
+							"name": "support.type.exception.python"
+						},
+						"1": {
+							"name": "keyword.control.flow.python"
+						},
+						"2": {
+							"name": "string.quoted.double.json"
+						},
+						"3": {
+							"name": "comment.block.empty.java"
+						}
+					},
+					"name": "punctuation.definition.string.end.json"
+				},
+				{
+					"match":  "^\\{\\{([\\w\\d._]*)\\}\\}$",
+					"captures": {
+						"0":{
+							"name": "support.type.exception.python"
+						},
+						"1": {
+							"name": "keyword.control.flow.python"
+						}
+					},
+					"name": "punctuation.definition.string.end.json"
+				}
+			]
+		},
+		"comments": {
+			"patterns": [{
+				"name": "comment.line.as",
+				"match":  "(\\%\\%).*$\\n?",
+				"captures": {
+					"1": {
+						"name": "comment.line.double-slash.js"
+					}
+				}
+			}]
+		}
+		
+	},
+	"scopeName": "pm"
+}

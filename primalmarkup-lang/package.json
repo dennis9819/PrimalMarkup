@@ -1,0 +1,25 @@
+{
+    "name": "primalmarkup-lang",
+    "displayName": "primalmarkup-lang",
+    "description": "PrimalMarkup Language Syntax",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.52.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "pms",
+            "aliases": ["PrimalMarkupScript", "pms"],
+            "extensions": [".pml",".pms",".pmc1",".pmc2",".pml"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "pms",
+            "scopeName": "pm",
+            "path": "./syntaxes/pms.tmLanguage.json"
+        }]
+    }
+}
