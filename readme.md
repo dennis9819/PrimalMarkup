@@ -66,6 +66,7 @@ Metadata Tags are substituted by the compiler.
  - seperator
  - section
  - subsection
+ - include
 #### header
 The **header** generates an ASCII-Art banner with the author and title.
 Example:
@@ -141,7 +142,18 @@ Output:
 
 	1.1 Hier gehts weiter
 	---------------------
-## Prerequisite
+
+#### include
+The include tag is substituted by the content of the specified file.
+Relative path are resolved in context of the current file.
+
+Example:
+
+    {{gmu.include=./filename.pms}}
+
+
+
+## Dependencies
 
     python3.7 -m pip install pyfiglet 
 

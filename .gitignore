@@ -1,0 +1,6 @@
+test
+test/*
+*.info
+*.pms
+src/__pycache__
+outfile.info

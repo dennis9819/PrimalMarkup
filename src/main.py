@@ -6,13 +6,15 @@ from render import *
 import pyfiglet
 import time
 import uuid
-import sys, getopt
+import sys, getopt, os
+from pathresolve import resolvePathUNIX
+from pathlib import Path
 
 #### VARS
 
 gmuSettings_global = {
     'Document' : {
-        'defaultWidth': 80,
+        'defaultWidth': '80',
         'doctype': 'info',
         'spacerChar': '#',
         'headerPrefix': 'False',
@@ -28,7 +30,8 @@ tmpFileUUID = str(uuid.uuid4())
 
 gmuInputFile = ''
 gmuOutputFile = ''
-gmuOutputFileTmp = "/tmp/{}.pmc1".format(tmpFileUUID)
+gmuOutputFileTmp1 = "/tmp/{}.pmc1".format(tmpFileUUID)
+gmuOutputFileTmp2 = "/tmp/{}.pmc2".format(tmpFileUUID)
 currentScope = "Document"
 
 metatagRegEx = re.compile('^\[\[([\w\d._]*)\=([\w\d\-\":;,._$%&\/\\\ ]*)\]\]$', re.IGNORECASE)
@@ -130,14 +133,67 @@ def processLine2(lineNumber, lineContent, tempFile):
     tempFile.write(lineContent + '\n')
 
 
-def processFile(path):
+
+def processFilePhase1(path, depth):
+    
+    startTime = time.time()
+    print("[Phase 1] Processing PrimalMarkupScript-Sourcefile: {}".format(path))
+
+    tempFile = open(gmuOutputFileTmp1, 'w')
+
+    linkedFileCount = 0
+
+    def processFile(path, depth, tempFile, linkedFileCount):
+        try:
+            linkedFileCount += 1
+            inFile = open(path, 'r')
+            inFileLines = inFile.readlines()
+
+            lineCount = 0
+            for line in inFileLines:
+                lineCount += 1
+
+                if line[0:6] == "{{gmu.":
+                    # found content-tag
+                    tagData = contenttagRegEx.match(line)
+        
+                    if not tagData:
+                        abortParseError(lineCount, line, "Cannot parse content-tag")
+                    
+                    tagType = tagData.group(1)[4:]
+
+                    if tagType == 'include':
+                        filePath = os.path.dirname(path)
+                        absPath = resolvePathUNIX(filePath, tagData.group(3))
+                        print("[LINKING] Include {}".format(filePath))
+                        # resolve filename in relation to current file
+                        processFile(absPath , depth + 1, tempFile , linkedFileCount)
+                        tempFile.write('\n')
+                        continue
+                
+                tempFile.write(line)
+        except IOError:
+            abortParseError(lineCount,path,"Sourcefile not accessible")
+
+    processFile(path, 0, tempFile, linkedFileCount)
+
+    tempFile.close()
+    endTime = time.time()
+
+    print("[Phase 1] Linked {} lines in {}s".format(linkedFileCount, (endTime - startTime)))
+    #print("          => Registered {} Sections".format(gmuSettings_global['counter_section']))
+    print("          => Generated pmc-file {}".format(gmuOutputFileTmp1))
+
+
+
+def processFilePhase2(path):
     try:
         startTime = time.time()
-        print("[Phase 1] Processing PrimalMarkupScript-Sourcefile: " + path)
+        print("[Phase 2] Processing PrimalMarkupScript-Sourcefile: " + path)
 
         inFile = open(path, 'r')
         inFileLines = inFile.readlines()
-        tempFile = open(gmuOutputFileTmp, 'w')
+        tempFile = open(gmuOutputFileTmp2, 'w')
 
         lineCount = 0
         for line in inFileLines:
@@ -147,18 +203,18 @@ def processFile(path):
         tempFile.close()
         endTime = time.time()
 
-        print("[Phase 1] Compiled {} lines in {}s".format(lineCount, (endTime - startTime)))
+        print("[Phase 2] Compiled {} lines in {}s".format(lineCount, (endTime - startTime)))
         print("          => Registered {} Sections".format(gmuSettings_global['counter_section']))
-        print("          => Generated pmc1-file {}".format(gmuOutputFileTmp))
+        print("          => Generated pmc-file {}".format(gmuOutputFileTmp2))
     except IOError:
         print("Sourcefile not accessible")
 
 
 
-def processFileRound2(path):
+def processFilePhase3(path):
     try:
         startTime = time.time()
-        print("[Phase 2] Processing pmc1-file: " + path)
+        print("[Phase 3] Processing pmc1-file: " + path)
 
         inFile = open(path, 'r')
         inFileLines = inFile.readlines()
@@ -172,7 +228,7 @@ def processFileRound2(path):
         tempFile.close()  
         endTime = time.time()
 
-        print("[Phase 2] Generated Content-Table in {}s".format((endTime - startTime)))
+        print("[Phase 3] Generated Content-Table in {}s".format((endTime - startTime)))
         print("          => Generated info-file {}".format(gmuOutputFile))
     except IOError:
         print("Sourcefile not accessible")
@@ -205,13 +261,13 @@ printHeader()
 
 for current_argument, current_value in arguments:
     if current_argument in ("-i", "--input"):
-        gmuInputFile = current_value
+        gmuInputFile = Path(current_value).resolve()
     elif current_argument in ("-h", "--help"):
         print ("Specify Input with -i or --input")
         print ("Specify Output with -o or --output")
         exit(0)
     elif current_argument in ("-o", "--output"):
-        gmuOutputFile = current_value
+        gmuOutputFile = Path(current_value).resolve()
 
 if gmuInputFile == '':
     print("[ERROR] You need to specify an input file")
@@ -223,7 +279,8 @@ if gmuOutputFile == '':
 
 #check if files exist
 
-processFile(gmuInputFile)
-processFileRound2(gmuOutputFileTmp)
+processFilePhase1(gmuInputFile,0)
+processFilePhase2(gmuOutputFileTmp1)
+processFilePhase3(gmuOutputFileTmp2)
 
 print("\nDone! Compiled 1 File.")

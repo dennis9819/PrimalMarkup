@@ -3,7 +3,7 @@ import pyfiglet
 def renderSeperator(properties):
     outString = ''
 
-    for i in range(0, properties['Document']['defaultWidth']):
+    for i in range(0, int(properties['Document']['defaultWidth'])):
         outString = "{}{}".format(outString, properties['Document']['spacerChar'])
     
     return outString
